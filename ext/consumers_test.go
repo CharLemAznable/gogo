@@ -3,71 +3,30 @@ package ext_test
 import (
 	"github.com/CharLemAznable/gogo/ext"
 	"github.com/CharLemAznable/gogo/fn"
-	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 )
 
 func TestConsumers(t *testing.T) {
-	wg := &sync.WaitGroup{}
-	var sum atomic.Int64
-
-	wg.Add(1)
-	cFn := fn.ConsumerOf(func(i int) {
-		sum.Add(int64(i))
-		wg.Done()
-	})
-
-	wg.Add(1)
-	ch := make(chan int, 1)
-	cCh := fn.ConsumerChan(ch)
-	go func() {
-		select {
-		case i := <-ch:
-			sum.Add(int64(i))
-			wg.Done()
-		}
-	}()
-
-	ext.JoinConsumers(cFn, cCh).Accept(2)
-	wg.Wait()
-	if sum.Load() != 4 {
-		t.Errorf("Expected sum 4, but got %d", sum.Load())
+	count := atomic.Int64{}
+	countFn := func(t string) {
+		count.Add(1)
 	}
-}
-
-func TestConsumersChecked(t *testing.T) {
-	wg := &sync.WaitGroup{}
-	var sum atomic.Int64
-
-	wg.Add(1)
-	ch1 := make(chan int, 1)
-	c1 := fn.ConsumerChan(ch1)
-	go func() {
-		select {
-		case i := <-ch1:
-			sum.Add(int64(i))
-			wg.Done()
-		}
-	}()
-
-	wg.Add(1)
-	ch2 := make(chan int, 1)
-	c2 := fn.ConsumerChan(ch2)
-	go func() {
-		select {
-		case i := <-ch2:
-			sum.Add(int64(i))
-			wg.Done()
-		}
-	}()
-
-	err := ext.JoinConsumers(c1, c2).CheckedAccept(2)
+	consumers := ext.NewConsumers[string]()
+	consumers.AppendConsumer(fn.ConsumerOf(countFn))
+	consumers.Accept("ABC")
+	time.Sleep(time.Second)
+	if 1 != count.Load() {
+		t.Errorf("Expected count 1, but got '%d'", count.Load())
+	}
+	consumers.RemoveConsumer(fn.ConsumerOf(countFn))
+	err := consumers.CheckedAccept("ABC")
 	if err != nil {
-		t.Errorf("Expected no error, but got: %v", err)
+		t.Errorf("Unexpected err: %s", err.Error())
 	}
-	wg.Wait()
-	if sum.Load() != 4 {
-		t.Errorf("Expected sum 4, but got %d", sum.Load())
+	time.Sleep(time.Second)
+	if 1 != count.Load() {
+		t.Errorf("Expected count 1, but got '%d'", count.Load())
 	}
 }

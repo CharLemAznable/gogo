@@ -1,5 +1,10 @@
 package fn
 
+import (
+	"github.com/CharLemAznable/gogo/lang"
+	"sync"
+)
+
 type Consumer[T any] interface {
 	Accept(T)
 	CheckedAccept(T) error
@@ -37,6 +42,28 @@ func (ch ConsumerCh[T]) CheckedAccept(t T) error {
 	return nil
 }
 
+type Consumers[T any] []Consumer[T]
+
+func (s Consumers[T]) Accept(t T) {
+	for _, sub := range s {
+		go sub.Accept(t)
+	}
+}
+
+func (s Consumers[T]) CheckedAccept(t T) error {
+	wg := &sync.WaitGroup{}
+	err := lang.MultiError{}
+	for _, sub := range s {
+		wg.Add(1)
+		go func(c Consumer[T]) {
+			err.Append(c.CheckedAccept(t))
+			wg.Done()
+		}(sub)
+	}
+	wg.Wait()
+	return err.MaybeUnwrap()
+}
+
 func ConsumerOf[T any](fn func(T)) Consumer[T] {
 	return ConsumerFn[T](fn)
 }
@@ -51,4 +78,8 @@ func ConsumerChan[T any](ch chan T) Consumer[T] {
 
 func Ignore[T any]() Consumer[T] {
 	return ConsumerOf(func(t T) { /* ignore */ })
+}
+
+func JoinConsumers[T any](consumers ...Consumer[T]) Consumer[T] {
+	return Consumers[T](consumers)
 }

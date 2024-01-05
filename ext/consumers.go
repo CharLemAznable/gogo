@@ -6,28 +6,44 @@ import (
 	"sync"
 )
 
-type Consumers[T any] []fn.Consumer[T]
-
-func (s Consumers[T]) Accept(t T) {
-	for _, sub := range s {
-		go sub.Accept(t)
-	}
+type Consumers[T any] interface {
+	Accept(T)
+	CheckedAccept(T) error
+	AppendConsumer(fn.Consumer[T]) Consumers[T]
+	RemoveConsumer(fn.Consumer[T]) Consumers[T]
 }
 
-func (s Consumers[T]) CheckedAccept(t T) error {
-	wg := &sync.WaitGroup{}
-	err := lang.MultiError{}
-	for _, sub := range s {
-		wg.Add(1)
-		go func(c fn.Consumer[T]) {
-			err.Append(c.CheckedAccept(t))
-			wg.Done()
-		}(sub)
-	}
-	wg.Wait()
-	return err.MaybeUnwrap()
+type consumers[T any] struct {
+	sync.RWMutex
+	consumers fn.Consumers[T]
 }
 
-func JoinConsumers[T any](consumers ...fn.Consumer[T]) fn.Consumer[T] {
-	return Consumers[T](consumers)
+func (s *consumers[T]) Accept(t T) {
+	s.RLock()
+	defer s.RUnlock()
+	s.consumers.Accept(t)
+}
+
+func (s *consumers[T]) CheckedAccept(t T) error {
+	s.RLock()
+	defer s.RUnlock()
+	return s.consumers.CheckedAccept(t)
+}
+
+func (s *consumers[T]) AppendConsumer(consumer fn.Consumer[T]) Consumers[T] {
+	s.Lock()
+	defer s.Unlock()
+	s.consumers = lang.AppendElementUnique[fn.Consumer[T]](s.consumers, consumer)
+	return s
+}
+
+func (s *consumers[T]) RemoveConsumer(consumer fn.Consumer[T]) Consumers[T] {
+	s.Lock()
+	defer s.Unlock()
+	s.consumers = lang.RemoveElementByValue[fn.Consumer[T]](s.consumers, consumer)
+	return s
+}
+
+func NewConsumers[T any]() Consumers[T] {
+	return &consumers[T]{consumers: make(fn.Consumers[T], 0)}
 }
