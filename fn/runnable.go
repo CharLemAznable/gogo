@@ -33,3 +33,7 @@ func RunnableOf(fn func()) Runnable {
 func RunnableCast(fn func() error) Runnable {
 	return RunnableCheckedFn(fn)
 }
+
+func Empty() Runnable {
+	return RunnableOf(func() { /* empty */ })
+}

@@ -7,11 +7,11 @@ func CheckZeroRun[T any](value T, zeroFn func(), notZeroFn func(T)) {
 }
 
 func NotZeroThenRun[T any](value T, notZeroFn func(T)) {
-	CheckZeroRun(value, func() {}, notZeroFn)
+	CheckZeroRun(value, Empty().Run, notZeroFn)
 }
 
 func ZeroThenRun[T any](value T, zeroFn func()) {
-	CheckZeroRun(value, zeroFn, func(t T) {})
+	CheckZeroRun(value, zeroFn, Ignore[T]().Accept)
 }
 
 func CheckZero[T any, R any](value T, zeroFn func() R, notZeroFn func(T) R) R {

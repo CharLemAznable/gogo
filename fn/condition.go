@@ -14,11 +14,11 @@ func CheckZeroAccept[T any](
 }
 
 func NotZeroThenAccept[T any](notZeroFn Consumer[T]) Consumer[T] {
-	return CheckZeroAccept(RunnableOf(func() {}), notZeroFn)
+	return CheckZeroAccept(Empty(), notZeroFn)
 }
 
 func IsZeroThenRun[T any](zeroFn Runnable) Consumer[T] {
-	return CheckZeroAccept(zeroFn, ConsumerOf(func(t T) {}))
+	return CheckZeroAccept(zeroFn, Ignore[T]())
 }
 
 func CheckZeroApply[T any, R any](

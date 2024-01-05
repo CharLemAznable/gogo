@@ -48,3 +48,7 @@ func ConsumerCast[T any](fn func(T) error) Consumer[T] {
 func ConsumerChan[T any](ch chan T) Consumer[T] {
 	return ConsumerCh[T](ch)
 }
+
+func Ignore[T any]() Consumer[T] {
+	return ConsumerOf(func(t T) { /* ignore */ })
+}
