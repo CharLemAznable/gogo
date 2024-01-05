@@ -16,10 +16,10 @@ func TestOrdered(t *testing.T) {
 
 	buf := &bytes.Buffer{}
 	for _, item := range orderedSlice {
-		_, _ = fmt.Fprintf(buf, "[%s]", item)
+		_, _ = fmt.Fprintf(buf, "[%s:%s]", item.String(), item.Order())
 	}
-	if "[BBB][CCC][AAA]" != buf.String() {
-		t.Errorf("Expected is '[BBB][CCC][AAA]', but got '%s'", buf.String())
+	if "[BBB:1][CCC:2][AAA:3]" != buf.String() {
+		t.Errorf("Expected is '[BBB:1][CCC:2][AAA:3]', but got '%s'", buf.String())
 	}
 }
 

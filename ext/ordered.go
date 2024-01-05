@@ -6,13 +6,13 @@ type Ordered interface {
 	Order() string
 }
 
-type OrderedSlice []Ordered
+type OrderedSlice[T Ordered] []T
 
-func (x OrderedSlice) Len() int           { return len(x) }
-func (x OrderedSlice) Less(i, j int) bool { return x[i].Order() < x[j].Order() }
-func (x OrderedSlice) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
-func (x OrderedSlice) Sort()              { sort.Sort(x) }
+func (x OrderedSlice[T]) Len() int           { return len([]T(x)) }
+func (x OrderedSlice[T]) Less(i, j int) bool { return []T(x)[i].Order() < []T(x)[j].Order() }
+func (x OrderedSlice[T]) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
+func (x OrderedSlice[T]) Sort()              { sort.Sort(x) }
 
-func JoinOrdered(items ...Ordered) OrderedSlice {
+func JoinOrdered[T Ordered](items ...T) OrderedSlice[T] {
 	return items
 }
