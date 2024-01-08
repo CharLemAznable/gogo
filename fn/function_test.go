@@ -1,8 +1,10 @@
 package fn_test
 
 import (
+	"bytes"
 	"errors"
 	. "github.com/CharLemAznable/gogo/fn"
+	"strconv"
 	"testing"
 )
 
@@ -71,6 +73,39 @@ func TestFunctionCast(t *testing.T) {
 	expectedInt = 0
 	if result3 != expectedInt {
 		t.Errorf("Expected %d, but got %d", expectedInt, result2)
+	}
+}
+
+func TestComposeFunction(t *testing.T) {
+	fn1 := func(s string) (int, error) {
+		return strconv.Atoi(s)
+	}
+	fn2 := func(i int) (string, error) {
+		buf := &bytes.Buffer{}
+		for index := 0; index < i; index++ {
+			buf.WriteString("*")
+		}
+		return buf.String(), nil
+	}
+
+	composeFunction := ComposeFunction(FunctionCast(fn1), FunctionCast(fn2))
+	ret := composeFunction.Apply("a")
+	if ret != "" {
+		t.Errorf("Expected '', but got %s", ret)
+	}
+	ret, err := composeFunction.CheckedApply("a")
+	if ret != "" {
+		t.Errorf("Expected '', but got %s", ret)
+	}
+	if err == nil {
+		t.Error("Expected get error, but not")
+	}
+	ret, err = composeFunction.CheckedApply("2")
+	if ret != "**" {
+		t.Errorf("Expected '**', but got %s", ret)
+	}
+	if err != nil {
+		t.Errorf("Expected no error, but got '%s'", err.Error())
 	}
 }
 
