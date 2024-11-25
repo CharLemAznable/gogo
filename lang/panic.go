@@ -9,20 +9,21 @@ func PanicIfError(err error) {
 }
 
 type PanicError struct {
-	msg string
 	v   any
-}
-
-func (e *PanicError) Error() string {
-	return e.msg
+	msg string
 }
 
 func (e *PanicError) Origin() any {
 	return e.v
 }
 
-func WrapPanic(v any) *PanicError {
-	return &PanicError{msg: fmt.Sprintf("panicked with %v", v), v: v}
+func (e *PanicError) Error() string {
+	return e.msg
+}
+
+func ErrorOfPanic(v any) *PanicError {
+	return &PanicError{v: v,
+		msg: fmt.Sprintf("panicked with %v", v)}
 }
 
 type Panicked chan any

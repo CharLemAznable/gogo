@@ -46,7 +46,7 @@ func TestPanicRecover(t *testing.T) {
 	case err := <-finished:
 		actualError = err
 	case v := <-panicked.Caught():
-		actualError = lang.WrapPanic(v)
+		actualError = lang.ErrorOfPanic(v)
 	}
 	if actualError.Error() != "error" {
 		t.Errorf("Expected error message 'error', but got '%s'", actualError.Error())
@@ -61,7 +61,7 @@ func TestPanicRecover(t *testing.T) {
 	case err := <-finished:
 		actualError = err
 	case v := <-panicked.Caught():
-		actualError = lang.WrapPanic(v)
+		actualError = lang.ErrorOfPanic(v)
 	}
 	panicError, ok := (actualError).(*lang.PanicError)
 	if !ok {

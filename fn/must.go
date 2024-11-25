@@ -15,7 +15,7 @@ func MustRun(runnable Runnable) Runnable {
 		case ret := <-finished:
 			return ret.err
 		case v := <-panicked.Caught():
-			return lang.WrapPanic(v)
+			return lang.ErrorOfPanic(v)
 		}
 	})
 }
@@ -33,7 +33,7 @@ func MustGet[T any](supplier Supplier[T]) Supplier[T] {
 		case ret := <-finished:
 			return ret.val, ret.err
 		case v := <-panicked.Caught():
-			return lang.Zero[T](), lang.WrapPanic(v)
+			return lang.Zero[T](), lang.ErrorOfPanic(v)
 		}
 	})
 }
@@ -51,7 +51,7 @@ func MustAccept[T any](consumer Consumer[T]) Consumer[T] {
 		case ret := <-finished:
 			return ret.err
 		case v := <-panicked.Caught():
-			return lang.WrapPanic(v)
+			return lang.ErrorOfPanic(v)
 		}
 	})
 }
@@ -69,7 +69,7 @@ func MustApply[T any, R any](function Function[T, R]) Function[T, R] {
 		case ret := <-finished:
 			return ret.val, ret.err
 		case v := <-panicked.Caught():
-			return lang.Zero[R](), lang.WrapPanic(v)
+			return lang.Zero[R](), lang.ErrorOfPanic(v)
 		}
 	})
 }
